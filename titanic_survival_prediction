@@ -6,7 +6,7 @@ train.shape
 train.head()
 train.dtypes
 
-# Missing values treatment
+# Missing values treatment 
 train.isnull().sum()
 
 #replacing null values of age with their mean
