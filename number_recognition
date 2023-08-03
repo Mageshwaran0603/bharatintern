@@ -1,0 +1,89 @@
+#importing the necessary packages and modules
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from tensorflow.keras.datasets import mnist
+from sklearn.model_selection import train_test_split
+
+#loading the dataset
+(x_train,y_train),(x_valid,y_valid)=mnist.load_data()
+
+#Splitting train dataset into train and test
+#test dataset for testing 
+x_train,x_test,y_train,y_test=train_test_split(
+    x_train,y_train,test_size=10000,random_state=42,stratify=y_train)
+
+#shapes of train test and val datasets
+print('train:',x_train.shape,y_train.shape)
+print('test:',x_test.shape,y_test.shape)
+print('valid:',x_valid.shape,y_valid.shape)
+
+#normalising the datasets
+x_train=x_train/255
+x_test=x_test/255
+x_valid=x_valid/255
+
+#checking the dataset
+for i in range(9):
+    plt.subplot(3,3,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.imshow(x_train[i])
+    plt.xlabel(y_train[i])
+
+
+#model building
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Flatten,Dense
+
+model=Sequential()
+
+model.add(Flatten(input_shape=(28,28)))
+model.add(Dense(128,activation='relu'))
+model.add(Dense(10,activation='softmax'))
+
+model.compile('adam',loss='sparse_categorical_crossentropy',metrics=['accuracy'])
+
+model.summary()
+
+#training model
+fit=model.fit(x_train,y_train,batch_size=64,epochs=20,verbose=1,validation_data=(x_valid,y_valid))
+
+# Plot Performance bw Train and Validation datasets
+#for Loss
+fig=plt.figure()
+plt.plot(fit.history['loss'],label='Train')
+plt.plot(fit.history['val_loss'],label='Valid')
+fig.suptitle('LOSS',fontsize=20)
+plt.legend(loc='upper right')
+plt.show()
+
+#for Accuracy
+fig=plt.figure()
+plt.plot(fit.history['accuracy'],label='Train')
+plt.plot(fit.history['val_accuracy'],label='Valid')
+fig.suptitle('acc',fontsize=20)
+plt.legend(loc='upper left')
+plt.show()
+
+# Evaluation
+#Evaluating the test dataset with evaluate function
+model.evaluate(x_valid,y_valid)
+using evaluate function, we got accuracy as 97.68%
+
+# Prediction of Test Dataset
+predicted_test=np.argmax(model.predict(x_test),axis=1)
+predicted_test
+from sklearn.metrics import accuracy_score
+
+#true values of test with its predicted values using accuracy_score function
+accuracy_score(predicted_test,y_test)
+# Our prediction with test dataset shows 97.54% accuracy
+
+# Manual testing 
+index=int(input("Enter Index:"))
+plt.imshow(x_test[index])
+plt.xticks([])
+plt.yticks([])
+plt.xlabel(np.argmax(model.predict(x_test[index:index+1]),axis=1))
+plt.show()
