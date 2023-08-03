@@ -1,0 +1,89 @@
+#loading the datasets
+import pandas as pd
+import os
+train=pd.read_csv('Downloads\\titanic\\train.csv')
+train.shape
+train.head()
+train.dtypes
+
+# Missing values treatment
+train.isnull().sum()
+
+#replacing null values of age with their mean
+train['Age'].fillna((train['Age'].mean().astype(int)),inplace=True)
+train['Cabin'].isnull().sum()/len(train)
+# note that the proportion of missing values of Cabin column is about four fifth to the total size of the dataset, no removing those rows will result in huge data loss, Hence we can remove the columns since replacing with zero or with any other central tendencies measure for huge proportion of data will lead to miscalculations..
+
+#removing the Cabin column
+train.drop(['Cabin'],axis=1,inplace=True)
+
+#removing the rows whose Embarked column has null value
+train.dropna(inplace=True)
+train.isnull().sum()
+
+# Outliers treatment
+train.plot.box()
+train['Age'].plot.box()
+# from the box plot we can say that passangers with Age as 80 is also possible, so lets not handle the outliers
+
+# Univariate Analysis
+train.dtypes
+train.describe()
+import seaborn as sn
+import matplotlib.pyplot as plt
+sn.distplot(train['Age'])
+correlation=train.loc[:,train.dtypes!=object].corr()
+(correlation['Survived']).sort_values()
+
+# Dummification
+train.dtypes
+train.head()
+
+#dummify the dataset excluding PassengerId,Name and Ticket COlumns
+newtrain=train.drop(['PassengerId','Name','Ticket'],axis=1)
+newtrain=pd.get_dummies(newtrain)
+newtrain.shape
+newtrain.isnull().sum().max()
+
+# forming independent and Target variables
+x=newtrain.drop(['Survived'],axis=1)
+y=newtrain['Survived']
+x.shape,y.shape
+
+# Splitting of dataset
+from sklearn.model_selection import train_test_split as tts
+x_train,x_test,y_train,y_test=tts(x,y,random_state=42,test_size=.2,stratify=y)
+x_train.shape,y_train.shape,x_test.shape,y_test.shape
+
+# Logistic regression
+from sklearn.linear_model import LogisticRegression
+logreg=LogisticRegression()
+logreg.fit(x_train,y_train)
+prediction=logreg.predict(x_test)
+from sklearn.metrics import accuracy_score
+accuracy_score(prediction,y_test)
+
+# Desicion Tree
+from sklearn.tree import DecisionTreeClassifier
+dtree=DecisionTreeClassifier()
+dtree.fit(x_train,y_train)
+prediction=dtree.predict(x_test)
+accuracy_score(prediction,y_test)
+# note that we get more accuracy through Logistic Regression Classification
+
+# predicting for given test dataset
+test=pd.read_csv('Downloads\\titanic\\test.csv')
+test.isnull().sum()
+test['Age'].fillna((test['Age'].mean().astype(int)),inplace=True)
+test.drop(['Cabin','PassengerId','Name','Ticket'],axis=1,inplace=True)
+test.fillna(0,inplace=True)
+newtest=pd.get_dummies(test)
+newtest.shape
+logreg.fit(x_train,y_train)
+x_train.columns
+test_prediction=logreg.predict(newtest)
+
+# Lets check with true values
+solution=pd.read_csv('Downloads\\titanic\\gender_submission.csv')
+accuracy_score(solution['Survived'],test_prediction)
+# thus we have acheived/correctly predicted 94.5% of datas of the test dataset
